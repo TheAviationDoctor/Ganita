@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { t, languages, type Lang } from '../../lib/i18n';
+import { articlesFor } from '../../lib/articles';
+export const getStaticPaths = () => languages.map(lang => ({ params: { lang } }));
+const lang = Astro.params.lang as Lang;
+const articles = await articlesFor(lang);
+const selected = ['zero', 'aryabhata', 'ramanujan'].map(slug => articles.find(a => a.data.slugKey === slug)).filter((a): a is NonNullable<typeof a> => !!a);
+---
+<Base title={t(lang, 'Indian Mathematical Heritage', 'भारतीय गणितीय विरासत')} lang={lang}>
+  <section class="hero shell">
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="accent-rule"></span>{t(lang, 'PEOPLE · TEXTS · IDEAS', 'व्यक्ति · ग्रंथ · विचार')}</p>
+      <h1>{t(lang, 'A world of ideas.', 'विचारों का संसार।')}<br/><em>{t(lang, 'A history worth reading.', 'पढ़ने योग्य इतिहास।')}</em></h1>
+      <p class="hero-description">{t(lang, 'Explore India’s mathematical heritage through the people who shaped it, the texts that preserved it, and the questions that still invite us to think.', 'भारतीय गणितीय विरासत का अन्वेषण करें—उसे आकार देने वाले व्यक्तियों, उसे संजोने वाले ग्रंथों और आज भी विचार के लिए प्रेरित करने वाले प्रश्नों के साथ।')}</p>
+      <div class="hero-actions"><a class="button" href={`/${lang}/explore/`}>{t(lang, 'Enter the collection', 'संग्रह में प्रवेश करें')} <span aria-hidden="true">→</span></a><a class="understated-link" href={`/${lang}/about/`}>{t(lang, 'About this project', 'परियोजना का परिचय')}</a></div>
+      <p class="hero-footnote">{t(lang, '12 connected articles. Two languages. An open invitation to learn.', '12 परस्पर जुड़े लेख। दो भाषाएँ। सीखने का खुला आमंत्रण।')}</p>
+    </div>
+    <figure class="hero-figure"><img src="/images/sine-study.svg" width="440" height="420" alt={t(lang, 'Circle diagram showing a radius, an angle, and its sine and cosine projections.', 'वृत्त में त्रिज्या, कोण और उसकी ज्या तथा कोज्या के प्रक्षेप दर्शाता आरेख।')}/><figcaption><span>01 / {t(lang, 'THE GEOMETRY OF A SINE', 'ज्या की ज्यामिति')}</span><p>{t(lang, 'From a chord in a circle to a tool for describing the heavens.', 'वृत्त की जीवा से आकाश के वर्णन का एक साधन।')}</p></figcaption></figure>
+  </section>
+  <section class="browse-strip" aria-label={t(lang, 'Ways into the collection', 'संग्रह के प्रवेश मार्ग')}><div class="shell"><span class="eyebrow">{t(lang, 'FIND YOUR WAY IN', 'अपना मार्ग चुनें')}</span>{[['person', t(lang, 'By person', 'व्यक्ति के अनुसार')], ['period', t(lang, 'By period', 'काल के अनुसार')], ['topic', t(lang, 'By topic', 'विषय के अनुसार')], ['text', t(lang, 'By text', 'ग्रंथ के अनुसार')]].map(([type, name]) => <a href={`/${lang}/explore/#${type}`}>{name} <span aria-hidden="true">↗</span></a>)}</div></section>
+  <section class="shell section-block">
+    <div class="section-heading"><div><p class="eyebrow">{t(lang, 'A PLACE TO BEGIN', 'आरंभ करने के लिए')}</p><h2>{t(lang, 'Three windows into the tradition', 'परंपरा की तीन झलकियाँ')}</h2></div><a class="text-link" href={`/${lang}/explore/`}>{t(lang, 'View all articles', 'सभी लेख देखें')} <span aria-hidden="true">→</span></a></div>
+    <div class="card-grid">{selected.map((article, i) => <ArticleCard article={article} lang={lang} number={i + 1}/>)}</div>
+  </section>
+  <section class="experiment-section"><div class="shell experiment-grid"><div class="experiment-art" aria-hidden="true"><span class="pi-symbol">π</span><span>1 − ⅓ + ⅕ − ⅐ + …</span><div class="convergence-lines"><i></i><i></i><i></i><i></i><i></i></div></div><div><p class="eyebrow">{t(lang, 'LEARN BY EXPLORING', 'अन्वेषण से सीखें')}</p><h2>{t(lang, 'Don’t just read the mathematics. Try it.', 'गणित को पढ़ें भी, आज़माएँ भी।')}</h2><p>{t(lang, 'Move an angle. Watch a series approach π. Discover the patterns hidden in partitions. Three small experiments connect historical ideas to mathematics you can see.', 'कोण बदलें। एक श्रेणी को π के निकट आते देखें। संख्या-विभाजनों में छिपे प्रतिरूप खोजें। तीन छोटे प्रयोग ऐतिहासिक विचारों को दिखाई देने वाले गणित से जोड़ते हैं।')}</p><a class="text-link" href={`/${lang}/demonstrations/`}>{t(lang, 'Open the mathematics room', 'गणित कक्ष खोलें')} <span aria-hidden="true">→</span></a></div></div></section>
+  <section class="shell editorial-note section-block"><p class="eyebrow">{t(lang, 'CURIOSITY, WITH CARE', 'जिज्ञासा, सावधानी के साथ')}</p><div><h2>{t(lang, 'A reading room, built on evidence.', 'प्रमाणों पर आधारित अध्ययन स्थल।')}</h2><p>{t(lang, 'This independent educational project brings together a small, carefully sourced collection. We distinguish historical evidence from later interpretation, show our references, and welcome corrections. This first edition is an AI-assisted draft awaiting human editorial review.', 'यह स्वतंत्र शैक्षिक परियोजना सावधानी से संदर्भित लेखों का एक छोटा संग्रह प्रस्तुत करती है। हम ऐतिहासिक प्रमाण और बाद की व्याख्या में अंतर करते हैं, अपने स्रोत बताते हैं और सुधारों का स्वागत करते हैं। यह प्रथम संस्करण एआई-सहायित प्रारूप है और मानव संपादकीय समीक्षा की प्रतीक्षा में है।')} <a href={`/${lang}/methodology/`}>{t(lang, 'Read our editorial method', 'हमारी संपादकीय पद्धति पढ़ें')} →</a></p></div></section>
+</Base>

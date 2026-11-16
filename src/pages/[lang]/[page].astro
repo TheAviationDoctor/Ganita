@@ -1,0 +1,13 @@
+---
+import Base from '../../layouts/Base.astro';
+import { editorialContent, editorialPages } from '../../lib/editorial';
+import { languages, t, type Lang } from '../../lib/i18n';
+export const getStaticPaths = () => languages.flatMap(lang => editorialPages.map(page => ({ params: { lang, page } })));
+const lang = Astro.params.lang as Lang;
+const page = Astro.params.page as typeof editorialPages[number];
+const content = editorialContent(lang, page);
+---
+<Base title={content.title} lang={lang}><div class="shell section-block"><div class="information-page"><header class="page-intro"><p class="eyebrow">{t(lang, 'THE PROJECT', 'परियोजना')}</p><h1>{content.title}</h1><p>{content.intro}</p></header><div class="prose">{content.sections.map(([heading, body]) => <section><h2>{heading}</h2><p>{body}</p></section>)}</div>
+{page === 'corrections' && <div class="notice"><a class="text-link" href="https://github.com/TheAviationDoctor/Ganita/issues/new">{t(lang, 'Suggest a correction on GitHub', 'GitHub पर सुधार सुझाएँ')} ↗</a><p><a href="https://github.com/TheAviationDoctor/Ganita">{t(lang, 'View the source repository', 'स्रोत रिपॉज़िटरी देखें')}</a></p></div>}
+{page === 'credits' && <p class="notice"><a href="/font-licenses.txt">{t(lang, 'Read the font licence notices', 'फ़ॉन्ट लाइसेंस सूचनाएँ पढ़ें')}</a> · <a href="https://github.com/TheAviationDoctor/Ganita/blob/main/LICENSE">{t(lang, 'Repository licence', 'रिपॉज़िटरी लाइसेंस')}</a></p>}
+<p class="correction-callout"><a href={`/${lang}/explore/`}>{t(lang, 'Return to the collection', 'संग्रह पर लौटें')} →</a></p></div></div></Base>

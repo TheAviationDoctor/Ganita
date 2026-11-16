@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ganita.pellegr.in/sitemap.xml

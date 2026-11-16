@@ -1,0 +1,18 @@
+---
+import Base from '../../layouts/Base.astro';
+import { articlesFor, articleUrl } from '../../lib/articles';
+import { languages, t, type Lang } from '../../lib/i18n';
+export const getStaticPaths = () => languages.map(lang => ({ params: { lang } }));
+const lang = Astro.params.lang as Lang;
+const articles = await articlesFor(lang);
+const refs = new Map<string, { source: typeof articles[number]['data']['sources'][number]; uses: { title: string; slug: string; locator: string }[] }>();
+for (const article of articles) for (const source of article.data.sources) {
+  const existing = refs.get(source.url) || { source, uses: [] };
+  existing.uses.push({ title: article.data.title, slug: article.data.slugKey, locator: source.locator });
+  refs.set(source.url, existing);
+}
+const sorted = [...refs.values()].sort((a, b) => a.source.author.localeCompare(b.source.author));
+---
+<Base title={t(lang, 'Bibliography', 'ग्रंथसूची')} lang={lang}><div class="shell section-block"><header class="page-intro"><p class="eyebrow">{t(lang, 'THE EVIDENCE BEHIND THE ARTICLES', 'लेखों के पीछे के प्रमाण')}</p><h1>{t(lang, 'Bibliography', 'ग्रंथसूची')}</h1><p>{t(lang, 'Primary texts, historical research, and reference works used in this edition. Each entry links back to the articles that use it. A translation is evidence mediated by an editor; a catalogue description is not a reading of the full book.', 'इस संस्करण में प्रयुक्त मूल ग्रंथ, ऐतिहासिक शोध और संदर्भ कृतियाँ। प्रत्येक प्रविष्टि उससे जुड़े लेखों का संकेत देती है। अनुवाद संपादक के माध्यम से मिला प्रमाण है; सूची-विवरण पढ़ना पूरी पुस्तक पढ़ना नहीं है।')}</p><p class="figure-attribution">{t(lang, 'Source checks: 16 November 2026. Many sources are in English or Sanskrit; the Hindi articles are our translations of the site’s prose.', 'स्रोत-जाँच: 16 नवंबर 2026। अनेक स्रोत अंग्रेज़ी या संस्कृत में हैं; हिन्दी लेख हमारी साइट के गद्य के अनुवाद हैं।')}</p></header>
+{sorted.map(({ source, uses }) => <section class="bibliography-entry"><p class="eyebrow">{source.kind === 'primary' ? t(lang, 'PRIMARY TEXT / TRANSLATION', 'मूल ग्रंथ / अनुवाद') : source.kind === 'research' ? t(lang, 'HISTORICAL RESEARCH', 'ऐतिहासिक शोध') : t(lang, 'REFERENCE WORK', 'संदर्भ कृति')}</p><h2><a href={source.url}>{source.title}</a></h2><p>{source.author}</p>{uses.map(use => <p><a href={articleUrl(lang, use.slug)}>{use.title}</a> — {use.locator}</p>)}</section>)}
+</div></Base>

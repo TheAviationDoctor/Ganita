@@ -1,0 +1,56 @@
+---
+import Base from '../../layouts/Base.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { languages, t, type Lang } from '../../lib/i18n';
+import { articlesFor } from '../../lib/articles';
+export const getStaticPaths = () => languages.map(lang => ({ params: { lang } }));
+const lang = Astro.params.lang as Lang;
+const articles = await articlesFor(lang);
+---
+<Base title={t(lang, 'Search', 'खोजें')} lang={lang}>
+  <div class="shell section-block" data-search-page data-lang={lang}><header class="page-intro"><p class="eyebrow">{t(lang, 'FOLLOW YOUR CURIOSITY', 'अपनी जिज्ञासा का अनुसरण करें')}</p><h1>{t(lang, 'Search the collection', 'संग्रह में खोजें')}</h1><p>{t(lang, 'Search the full text of all twelve articles in this language. Names work with or without Latin diacritics: try “Madhava”, “zero”, or “partitions”.', 'इस भाषा के सभी बारह लेखों के पूरे पाठ में खोजें। “माधव”, “शून्य” या “विभाजन” आज़माएँ। रोमन नामों में मात्राचिह्न देना आवश्यक नहीं है।')}</p></header>
+    <form class="search-form" role="search" action={`/${lang}/search/`} method="get"><label for="search-input">{t(lang, 'Words, people, or texts', 'शब्द, व्यक्ति या ग्रंथ')}</label><div class="search-input-row"><input id="search-input" name="q" type="search" autocomplete="off" placeholder={t(lang, 'What would you like to explore?', 'आप क्या खोजना चाहेंगे?')} aria-describedby="search-status"/><button class="button" type="submit">{t(lang, 'Search', 'खोजें')} →</button></div></form>
+    <noscript><p class="notice">{t(lang, 'Full-text search needs JavaScript. All articles are listed below; the collection also offers browsing by person, period, topic, and text.', 'पूरे पाठ में खोजने के लिए जावास्क्रिप्ट आवश्यक है। सभी लेख नीचे दिए गए हैं; संग्रह को व्यक्ति, काल, विषय और ग्रंथ के अनुसार भी देखा जा सकता है।')} <a href={`/${lang}/explore/`}>{t(lang, 'Browse the collection', 'संग्रह देखें')}</a></p></noscript>
+    <p id="search-status" class="search-status" role="status" aria-live="polite">{t(lang, '12 articles in the collection.', 'संग्रह में 12 लेख हैं।')}</p>
+    <p class="empty-state" hidden>{t(lang, 'No matching articles. Try fewer words, a related term, or browse the collection.', 'कोई मेल खाता लेख नहीं मिला। कम शब्द, संबंधित शब्द आज़माएँ या संग्रह देखें।')} <a href={`/${lang}/explore/`}>{t(lang, 'Browse', 'संग्रह देखें')} →</a></p>
+    <div class="card-grid all-articles" data-search-results>{articles.map(article => <div data-search-slug={article.data.slugKey}><ArticleCard article={article} lang={lang}/></div>)}</div>
+  </div>
+</Base>
+<script>
+  import { normalizeSearch } from '../../lib/search';
+  const root = document.querySelector<HTMLElement>('[data-search-page]');
+  if (root) {
+    const lang = root.dataset.lang!;
+    const input = root.querySelector<HTMLInputElement>('#search-input')!;
+    const status = root.querySelector<HTMLElement>('#search-status')!;
+    const form = root.querySelector('form')!;
+    const cards = [...root.querySelectorAll<HTMLElement>('[data-search-slug]')];
+    const empty = root.querySelector<HTMLElement>('.empty-state')!;
+    input.value = new URLSearchParams(location.search).get('q') || '';
+    let index: { slug: string; text: string }[] = [];
+    function search() {
+      const terms = normalizeSearch(input.value).split(/\s+/).filter(Boolean);
+      const matches = new Set(index.filter(article => terms.every(term => normalizeSearch(article.text).includes(term))).map(article => article.slug));
+      cards.forEach(card => { card.hidden = !matches.has(card.dataset.searchSlug!); });
+      empty.hidden = matches.size > 0;
+      status.textContent = lang === 'en' ? `${matches.size} ${matches.size === 1 ? 'article' : 'articles'}${terms.length ? ' found' : ' in the collection'}.` : `${matches.size} लेख${terms.length ? ' मिले' : ' संग्रह में हैं'}।`;
+    }
+    try {
+      const response = await fetch(`/${lang}/search-index.json`);
+      if (!response.ok) throw new Error('Index unavailable');
+      index = await response.json();
+      input.addEventListener('input', search);
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        const url = new URL(location.href);
+        input.value.trim() ? url.searchParams.set('q', input.value.trim()) : url.searchParams.delete('q');
+        history.replaceState({}, '', url);
+        search();
+      });
+      search();
+    } catch {
+      status.textContent = lang === 'en' ? 'Search could not load. All articles remain available below.' : 'खोज लोड नहीं हो सकी। सभी लेख नीचे उपलब्ध हैं।';
+      form.addEventListener('submit', event => event.preventDefault());
+    }
+  }
+</script>

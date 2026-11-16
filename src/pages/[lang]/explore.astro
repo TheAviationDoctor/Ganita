@@ -1,0 +1,20 @@
+---
+import Base from '../../layouts/Base.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { languages, t, displayTag, type Lang } from '../../lib/i18n';
+import { articlesFor, browseUrl } from '../../lib/articles';
+export const getStaticPaths = () => languages.map(lang => ({ params: { lang } }));
+const lang = Astro.params.lang as Lang;
+const articles = await articlesFor(lang);
+const sections = [
+  { type: 'person', title: t(lang, 'People', 'व्यक्ति'), values: [...new Set(articles.flatMap(a => a.data.people))].sort() },
+  { type: 'period', title: t(lang, 'Periods', 'काल'), values: ['early', 'classical', 'medieval', 'modern'] },
+  { type: 'topic', title: t(lang, 'Topics', 'विषय'), values: [...new Set(articles.flatMap(a => a.data.topics))].sort() },
+  { type: 'text', title: t(lang, 'Texts', 'ग्रंथ'), values: [...new Set(articles.flatMap(a => a.data.texts))].sort() },
+];
+---
+<Base title={t(lang, 'The collection', 'लेख-संग्रह')} lang={lang}>
+  <div class="shell section-block"><header class="page-intro"><p class="eyebrow">{t(lang, 'TWELVE CONNECTED READINGS', 'बारह परस्पर जुड़े लेख')}</p><h1>{t(lang, 'The collection', 'लेख-संग्रह')}</h1><p>{t(lang, 'Begin with a question, a person, or a text. Follow the connections from there. Periods are editorial guides, not sharp historical boundaries.', 'किसी प्रश्न, व्यक्ति या ग्रंथ से शुरुआत करें। फिर उससे जुड़े विषयों की ओर बढ़ें। काल-विभाजन संपादकीय मार्गदर्शक हैं, कठोर ऐतिहासिक सीमाएँ नहीं।')}</p></header>
+  <div class="taxonomy-grid">{sections.map(section => <section id={section.type}><h2>{section.title}</h2><div class="tag-list">{section.values.map(value => <a href={browseUrl(lang, section.type, value)}>{displayTag(lang, section.type, value)} <span aria-hidden="true">↗</span></a>)}</div></section>)}</div>
+  <div class="section-heading"><h2>{t(lang, 'All articles', 'सभी लेख')}</h2><a href={`/${lang}/search/`}>{t(lang, 'Search the collection', 'संग्रह में खोजें')} →</a></div><div class="card-grid all-articles">{articles.map((article, i) => <ArticleCard article={article} lang={lang} number={i + 1}/>)}</div></div>
+</Base>

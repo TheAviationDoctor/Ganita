@@ -1,0 +1,20 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import ArticleCard from '../../../components/ArticleCard.astro';
+import { t, label, kindNames, displayTag, type Lang } from '../../../lib/i18n';
+import { browseUrl } from '../../../lib/articles';
+export async function getStaticPaths() { return (await getCollection('articles')).map(article => ({ params: { lang: article.data.lang, slug: article.data.slugKey }, props: { article } })); }
+const { article } = Astro.props;
+const lang = article.data.lang as Lang;
+const { Content, headings } = await render(article);
+const all = await getCollection('articles');
+const related = article.data.related.map(slug => all.find(a => a.data.lang === lang && a.data.slugKey === slug)).filter((a): a is NonNullable<typeof a> => !!a);
+---
+<Base title={article.data.title} description={article.data.summary} lang={lang}>
+  <div class="shell article-shell"><div class="article-breadcrumb"><a href={`/${lang}/explore/`}>{t(lang, 'The collection', 'लेख-संग्रह')}</a><span aria-hidden="true">/</span><span>{label(lang, kindNames[article.data.kind])}</span></div>
+  <header class="article-header"><p class="eyebrow">{displayTag(lang, 'period', article.data.period)}</p><h1>{article.data.title}</h1><p class="article-standfirst">{article.data.summary}</p><div class="article-meta"><span>{t(lang, 'Revised', 'संशोधित')} <time datetime={article.data.lastRevised}>{new Date(`${article.data.lastRevised}T12:00:00Z`).toLocaleDateString(lang === 'en' ? 'en-GB' : 'hi-IN', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}</time></span><span>{t(lang, 'AI-assisted · Review copy', 'एआई-सहायित · समीक्षा प्रति')}</span></div></header>
+  <div class="reading-layout"><aside class="article-sidebar"><nav aria-label={t(lang, 'In this article', 'इस लेख में')}><p class="eyebrow">{t(lang, 'IN THIS ARTICLE', 'इस लेख में')}</p>{headings.filter(h => h.depth === 2).map(h => <a href={`#${h.slug}`}>{h.text}</a>)}<a href="#sources">{t(lang, 'Sources & notes', 'स्रोत और टिप्पणियाँ')}</a></nav><p class="eyebrow sidebar-label">{t(lang, 'FOLLOW A THREAD', 'संबंधित विषय')}</p><div class="tag-list">{article.data.topics.map(topic => <a href={browseUrl(lang, 'topic', topic)}>{displayTag(lang, 'topic', topic)}</a>)}{article.data.texts.map(text => <a href={browseUrl(lang, 'text', text)}>{displayTag(lang, 'text', text)}</a>)}</div></aside>
+  <div><article class="prose"><Content /></article><section id="sources" class="source-notes"><h2>{t(lang, 'Sources & notes', 'स्रोत और टिप्पणियाँ')}</h2><p>{t(lang, 'Numbers in the article point to these sources. Locators identify the passages used; modern worked examples are our own unless stated otherwise.', 'लेख की संख्याएँ इन स्रोतों की ओर संकेत करती हैं। स्थान-सूचक उपयोग किए गए अंश बताते हैं; जहाँ अन्यथा न कहा गया हो, आधुनिक हल किए गए उदाहरण हमारे अपने हैं।')}</p><ol>{article.data.sources.map((source, i) => <li id={`ref-${i + 1}`}><a href={source.url}>{source.title}</a><span>{source.author}. {source.locator}.</span><small>{t(lang, 'Source type', 'स्रोत का प्रकार')}: {source.kind === 'primary' ? t(lang, 'Primary text / translation', 'मूल ग्रंथ / अनुवाद') : source.kind === 'research' ? t(lang, 'Historical research', 'ऐतिहासिक शोध') : t(lang, 'Reference work', 'संदर्भ कृति')}</small></li>)}</ol></section><div class="correction-callout"><a href={`/${lang}/corrections/`}>{t(lang, 'Found something to improve? Suggest a correction.', 'कुछ सुधार योग्य मिला? सुधार सुझाएँ।')} →</a></div></div></div>
+  <section class="related-section"><div class="section-heading"><h2>{t(lang, 'Continue the inquiry', 'अन्वेषण जारी रखें')}</h2></div><div class="card-grid">{related.map(a => <ArticleCard article={a} lang={lang}/>)}</div></section></div>
+</Base>

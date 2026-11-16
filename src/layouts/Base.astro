@@ -1,0 +1,66 @@
+---
+import '../styles/global.css';
+import '@fontsource-variable/crimson-pro';
+import '@fontsource-variable/dm-sans';
+import '@fontsource/noto-serif-devanagari/400.css';
+import '@fontsource/noto-serif-devanagari/600.css';
+import { t, otherLang, type Lang } from '../lib/i18n';
+interface Props { title: string; description?: string; lang: Lang; alternate?: string; }
+const { title, description = t(Astro.props.lang, 'An independent, bilingual reading room for Indian mathematical heritage. Explore people, texts, ideas, and the evidence behind them.', 'भारतीय गणितीय विरासत के लिए एक स्वतंत्र द्विभाषी अध्ययन स्थल। व्यक्तियों, ग्रंथों, विचारों और उनके प्रमाणों का अन्वेषण करें।'), lang, alternate } = Astro.props;
+const currentPath = Astro.url.pathname;
+const alternatePath = alternate || currentPath.replace(`/${lang}/`, `/${otherLang(lang)}/`);
+const nav = [
+  ['explore', t(lang, 'The collection', 'लेख-संग्रह')],
+  ['demonstrations', t(lang, 'Explore the mathematics', 'गणित का अन्वेषण')],
+  ['bibliography', t(lang, 'Bibliography', 'ग्रंथसूची')],
+  ['about', t(lang, 'About', 'परिचय')],
+];
+---
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} — Gaṇita</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f6f2e8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={new URL(currentPath, Astro.site)} />
+    <link rel="alternate" hreflang={lang} href={new URL(currentPath, Astro.site)} />
+    <link rel="alternate" hreflang={otherLang(lang)} href={new URL(alternatePath, Astro.site)} />
+    <meta property="og:title" content={`${title} — Gaṇita`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content={lang === 'en' ? 'en_GB' : 'hi_IN'} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{t(lang, 'Skip to content', 'मुख्य सामग्री पर जाएँ')}</a>
+    <div class="edition-bar"><div class="shell">{t(lang, 'AN INDEPENDENT READING ROOM', 'एक स्वतंत्र अध्ययन स्थल')}<span>{t(lang, 'FIRST EDITION · REVIEW COPY', 'प्रथम संस्करण · समीक्षा प्रति')}</span></div></div>
+    <header class="site-header shell">
+      <a class="brand" href={`/${lang}/`} aria-label={t(lang, 'Gaṇita home', 'गणित मुखपृष्ठ')}>
+        <span class="brand-mark" aria-hidden="true">ग</span>
+        <span class="brand-name">{t(lang, 'Gaṇita', 'गणित')}<small>{t(lang, 'INDIAN MATHEMATICAL HERITAGE', 'भारतीय गणितीय विरासत')}</small></span>
+      </a>
+      <nav aria-label={t(lang, 'Main navigation', 'मुख्य नेविगेशन')}>
+        {nav.map(([path, name]) => <a href={`/${lang}/${path}/`} aria-current={currentPath.startsWith(`/${lang}/${path}/`) ? 'page' : undefined}>{name}</a>)}
+      </nav>
+      <div class="header-actions">
+        <a class="search-link" href={`/${lang}/search/`} aria-label={t(lang, 'Search the collection', 'संग्रह में खोजें')}><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><span class="mobile-search-label">{t(lang, 'Search', 'खोजें')}</span></a>
+        <a class="language-link" href={alternatePath} lang={otherLang(lang)} hreflang={otherLang(lang)} aria-label={t(lang, 'Read this page in Hindi', 'यह पृष्ठ अंग्रेज़ी में पढ़ें')}>{t(lang, 'हिन्दी', 'English')} <span aria-hidden="true">↗</span></a>
+      </div>
+    </header>
+    <main id="main" tabindex="-1"><slot /></main>
+    <footer class="site-footer">
+      <div class="shell footer-grid">
+        <div><a class="footer-brand" href={`/${lang}/`}>{t(lang, 'Gaṇita', 'गणित')}<span> / {t(lang, 'a continuing inquiry', 'एक सतत अन्वेषण')}</span></a><p>{t(lang, 'Mathematics has a history. Understanding it begins with reading carefully.', 'गणित का भी इतिहास है। उसे समझने की शुरुआत ध्यानपूर्वक पढ़ने से होती है।')}</p></div>
+        <nav aria-label={t(lang, 'Editorial information', 'संपादकीय जानकारी')}>
+          <a href={`/${lang}/methodology/`}>{t(lang, 'Editorial method', 'संपादकीय पद्धति')}</a>
+          <a href={`/${lang}/corrections/`}>{t(lang, 'Corrections & contact', 'सुधार और संपर्क')}</a>
+          <a href={`/${lang}/history/`}>{t(lang, 'Revision history', 'संशोधन इतिहास')}</a>
+          <a href={`/${lang}/credits/`}>{t(lang, 'Image & type credits', 'चित्र और टाइप श्रेय')}</a>
+        </nav>
+      </div>
+      <div class="shell footer-bottom"><span>{t(lang, 'Independent project · Singapore · No institutional affiliation', 'स्वतंत्र परियोजना · सिंगापुर · कोई संस्थागत संबद्धता नहीं')}</span><span>{t(lang, 'AI-assisted draft · Human editorial review pending', 'एआई-सहायित प्रारूप · मानव संपादकीय समीक्षा लंबित')}</span></div>
+    </footer>
+  </body>
+</html>
